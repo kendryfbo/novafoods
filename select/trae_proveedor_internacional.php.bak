@@ -1,0 +1,28 @@
+<?php
+	$id_proveedor_internacional=$_GET["id_proveedor_internacional"];
+	include_once("../clases/conexion.php");
+	$conexion= new conexion(); 
+	$sql1="select 
+			rut,
+			nombre_proveedor,
+			direccion,
+			telefono,
+			giro,
+			Contacto,
+			email,
+			condicion_de_pago
+			from proveedores_internacionales 
+			where id_proveedor=".$id_proveedor_internacional;
+ 		 	$ejecuta=mysql_query($sql1,$conexion->link);
+			while ($fila = mysql_fetch_array($ejecuta))
+			{
+				
+			$salida[]=array("nombre_proveedor"=>utf8_encode($fila[0]),"direccion"=>$fila[1],"fono"=>$fila[2],"giro"=>$fila[3],"Contacto"=>$fila[4]
+				,"email"=>$fila[5],"condicion_de_pago"=>$fila[6],"rut"=>$fila[7]);
+			}
+			echo json_encode($salida);
+	 
+		 
+
+
+?>

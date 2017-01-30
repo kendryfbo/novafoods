@@ -1,0 +1,628 @@
+<?php
+	date_default_timezone_set('UTC');
+	$fecha=date("Y-m-d");
+	include_once("clases/conexion.php"); 
+	session_start();
+	if(!isset($_SESSION['usuario'])) 
+	{
+	  header('Location: index.php'); 
+	  exit();
+	} 
+	$user=($_SESSION['usuario']);
+	$id_Usuario=($_SESSION['id_Usuario']);  
+?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>Nota de Venta</title>
+	<link href="css/reset.css" rel="stylesheet" type="text/css" />
+	<link href="css/estilo2.css" rel="stylesheet" type="text/css" />
+	<link href="css/estilos.css" rel="stylesheet" type="text/css" />
+	<script src="js/jquery.js"></script>
+	<script src="js/funcion_combos.js"></script>
+	<script src="js/funcion_combos_pedidos.js" type="text/javascript"></script>
+	<script src="js/funcion_ventas_productos.js"></script>
+	<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+</head>
+<script>
+$(document).ready(function() {
+	var id_usuario = "<?php echo $id_Usuario; ?>";
+	var stream="id_usuario="+id_usuario+"&"+"funcion="+1;
+	$.ajax({
+		type: "POST",
+		url: "insert/ingresa_nota_venta.php",
+		data:stream,
+		success: function(data)	{								
+			$("#num_nota_venta").val (data);
+		}			
+	});	
+	$('#num_nota_venta').keypress(function (e) {
+		if(e.which ==13)
+		{
+			if($.trim($("#num_nota_venta").val())==="") 
+			{
+				$("#num_nota_venta").focus();
+				$('#valida-nota_venta').fadeIn('slow'); 
+				setTimeout(function(){$('#valida-nota_venta').fadeOut('slow');},1000); 
+				return false;
+			}
+			if ($.trim($("#num_nota_venta").val())==="0") 
+			{
+				$('#num_nota_venta').val('')
+				$("#num_nota_venta").focus ();
+				$('#valida-nota_venta_0').fadeIn('slow'); 
+				setTimeout(function(){$('#valida-nota_venta_mayor').fadeOut('slow');},1000); 
+				return false;
+			}
+			var numero_nota_venta=$('#num_nota_venta').val();
+			var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+5;
+			$.ajax({
+				type: "POST",
+				url: "insert/ingresa_nota_venta.php",
+				data:stream,
+				success: function(data)	{
+					if (data==1)
+					{
+						var action = confirm('Desea Traer Nota De Venta?');
+						if(action==true)
+						{
+							var numero_nota_venta=$("#num_nota_venta").val ();
+							var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+6;
+							$.ajax({
+								type: "POST",
+								url: "insert/ingresa_nota_venta.php",
+								data:stream,
+								cache: false,
+								dataType: 'json',
+								success: function(data)	{	
+									for(i=0;i<data.length;i++)
+									{
+										if (data[i].valor==1)
+										{
+											alert ("Nota de Venta Vacia Ingrese Otra");
+											$("#btn_imprimir").hide();
+											$("#btn_nota_nueva").hide();									
+											$(".limpiar").val ('');
+											$(".limpiar_2").val (0);				
+											$("#productos_finanzas").html ('');	
+											location.href = "crear_nota_venta.php";
+										}
+										else
+										{
+											$('#fecha_nota_venta').val(data[i].fecha_nota_venta);
+											$('#id_cliente_nacional').val(data[i].cliente);
+											$('#centro_venta').val(data[i].centro_venta);
+											$('#orden_compra').val(data[i].orden_compra);
+											$('#fecha_despacho_nota_venta').val(data[i].fecha_despacho);
+											$('#condicion_venta').val(data[i].Condicion);
+											$('#rut_cliente').val(data[i].rut);
+											$('#list_vendedores').val(data[i].vendedor);
+											$('#obs_despacho').val(data[i].observacion);
+											$('#subtotal_nota_venta').val(data[i].sub_total);
+											$('#iva_nota_venta').val(data[i].iva);
+											$('#total_nota_venta').val(data[i].total);
+											$('#ila_nota_venta').val(data[i].ila);
+											$('#version').val(data[i].version);
+											var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+7;
+											$.ajax({
+												type: "POST",
+												url: "insert/ingresa_nota_venta.php",
+												data:stream,
+												success: function(data)	{	
+													$('#productos_finanzas ').html("");	
+													$('#productos_finanzas').append(data);		
+												}			
+											});
+											$("#btn_imprimir").show();
+											$("#btn_nota_nueva").hide();	
+											$("#prod_nota_nuevos").hide();												
+										}						 
+									}								
+								}			
+							});
+						}
+					}
+					else if (data==2)
+					{
+						var action = confirm('Desea Cambiar Esta Nota De Venta?');
+						if(action==true)
+						{
+							$("#num_nota_venta").attr('disabled',true);
+							var numero_nota_venta=$("#num_nota_venta").val ();
+							var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+6;
+							$.ajax({
+								type: "POST",
+								url: "insert/ingresa_nota_venta.php",
+								data:stream,
+								cache: false,
+								dataType: 'json',
+								success: function(data)	{	
+									for(i=0;i<data.length;i++)
+									{
+										if (data[i].valor==1)
+										{
+											alert ("Nota de Venta Vacia Ingrese Otra");
+											$("#btn_imprimir").hide();
+											$("#btn_nota_nueva").hide();									
+											$(".limpiar").val ('');
+											$(".limpiar_2").val (0);				
+											$("#productos_finanzas").html ('');	
+											location.href = "crear_nota_venta.php";
+										}
+										else
+										{
+											$('#fecha_nota_venta').val(data[i].fecha_nota_venta);
+											$('#id_cliente_nacional').val(data[i].cliente);
+											$('#centro_venta').val(data[i].centro_venta);
+											$('#orden_compra').val(data[i].orden_compra);
+											$('#fecha_despacho_nota_venta').val(data[i].fecha_despacho);
+											$('#condicion_venta').val(data[i].Condicion);
+											$('#rut_cliente').val(data[i].rut);
+											$('#list_vendedores').val(data[i].vendedor);
+											$('#obs_despacho').val(data[i].observacion);
+											$('#subtotal_nota_venta').val(data[i].sub_total);
+											$('#iva_nota_venta').val(data[i].iva);
+											$('#total_nota_venta').val(data[i].total);
+											$('#ila_nota_venta').val(data[i].ila);
+											$('#version').val(data[i].version);
+											var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+12;
+											$.ajax({
+												type: "POST",
+												url: "insert/ingresa_nota_venta.php",
+												data:stream,
+												success: function(data)	{	
+													$('#productos_finanzas').html("");	
+													$('#productos_finanzas').append(data);		
+												}			
+											});
+											$("#btn_imprimir").show();
+											$("#prod_nota_modificar").show();												
+											$("#prod_nota_nuevos").hide();	
+											$("#btn_nota_modificada").show();	
+											$("#btn_nota_nueva").hide();
+										}						 
+									}								
+								}			
+							});
+						}					
+					}
+					else if (data==3)
+					{
+						$('#num_nota_venta').val('')
+						$("#num_nota_venta").focus ();
+						$('#valida-nota_venta_correlativo').fadeIn('slow'); 
+						setTimeout(function(){$('#valida-nota_venta_correlativo').fadeOut('slow');},1000); 
+						var stream="id_usuario="+id_usuario+"&"+"funcion="+1;
+						$.ajax({
+							type: "POST",
+							url: "insert/ingresa_nota_venta.php",
+							data:stream,
+							success: function(data)	{								
+								$("#num_nota_venta").val (data);
+							}			
+						});	
+					}
+					else if (data==4)
+					{
+						var numero_nota_venta=$("#num_nota_venta").val ();
+						var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+6;
+						$.ajax({
+							type: "POST",
+							url: "insert/ingresa_nota_venta.php",
+							data:stream,
+							cache: false,
+							dataType: 'json',
+							success: function(data)	{	
+								for(i=0;i<data.length;i++)
+								{
+									if (data[i].valor==1)
+									{
+										alert ("Nota de Venta Vacia Ingrese Otra");
+										$("#btn_imprimir").hide();
+										$("#btn_nota_nueva").hide();									
+										$(".limpiar").val ('');
+										$(".limpiar_2").val (0);				
+										$("#productos_finanzas").html ('');	
+										location.href = "crear_nota_venta.php";
+									}
+									else
+									{
+										$('#fecha_nota_venta').val(data[i].fecha_nota_venta);
+										$('#id_cliente_nacional').val(data[i].cliente);
+										$('#centro_venta').val(data[i].centro_venta);
+										$('#orden_compra').val(data[i].orden_compra);
+										$('#fecha_despacho_nota_venta').val(data[i].fecha_despacho);
+										$('#condicion_venta').val(data[i].Condicion);
+										$('#rut_cliente').val(data[i].rut);
+										$('#list_vendedores').val(data[i].vendedor);
+										$('#obs_despacho').val(data[i].observacion);
+										$('#subtotal_nota_venta').val(data[i].sub_total);
+										$('#iva_nota_venta').val(data[i].iva);
+										$('#total_nota_venta').val(data[i].total);
+										$('#ila_nota_venta').val(data[i].ila);
+										$('#version').val(data[i].version);
+										var stream="numero_nota_venta="+numero_nota_venta+"&"+"funcion="+30;
+										$.ajax({
+											type: "POST",
+											url: "insert/ingresa_nota_venta.php",
+											data:stream,
+											success: function(data)	{	
+												$('#productos_finanzas ').html("");	
+												$('#productos_finanzas').append(data);		
+											}			
+										});
+										$("#estado_proforma").show();
+										$("#btn_nota_nueva").hide();	
+										$("#prod_nota_nuevos").hide();												
+									}						 
+								}								
+							}			
+						});
+					}
+			 	} 
+			});
+		} 
+	});
+	// se trae el rut de cliente se aprovecha la pagina por ser un requerimiento posterior
+	var stream="funcion="+4;
+	$.ajax({
+		type: "POST",
+		url: "insert/ingresa_nota_venta.php",
+		data:stream,
+		success: function(data)	{
+			$("#lista_precio").html ("");
+			$("#lista_precio").append (data);
+		}	
+	});
+	$("#fecha_despacho_nota_venta").datepicker({
+		dateFormat: 'dd-mm-yy',
+        changeMonth: true,
+        changeYear: true,
+        showAnimate: 'drop',
+	});
+	$("#id_cliente_nacional").change(function() {
+		// se trae el rut de cliente se aprovecha la pagina por ser un requerimiento posterior
+		var id_cliente = $('#id_cliente_nacional option:selected').attr('id');
+		var stream="id_cliente="+id_cliente+"&"+"funcion="+3;
+		$.ajax({
+			type: "POST",
+			url: "insert/ingresa_nota_venta.php",
+			data:stream,
+			success: function(data)	{		
+				$("#rut_cliente").val (data);	
+				var stream="id_cliente="+id_cliente+"&"+"funcion="+1;
+				$.ajax({
+					type: "POST",
+					url: "select/trae_suma_factura_pagos.php",
+					data:stream,
+					success: function(data)	{		
+						alert (data);							
+					}	
+				});
+			}	
+		});	
+	});	
+	$( "#fecha_despacho_nota_venta" ).datepicker( $.datepicker.regional[ "es" ]);
+	$("#fecha_nota_venta").datepicker({
+		dateFormat: 'dd-mm-yy',
+        changeMonth: true,
+        changeYear: true,
+        showAnimate: 'drop',
+	});
+	 $( "#fecha_despacho_nota_venta" ).datepicker( $.datepicker.regional[ "es" ]);
+});
+function ValidaSoloNumeros() {
+ if ( (event.keyCode < 48 ) || (event.keyCode > 57) ) 
+  event.returnValue = false;
+}
+</script>
+<body>
+<table class="table">
+	<tr>
+		<td height="100%">
+			<div class="body">
+				<div class="modulo widht_modulo_full">
+					<div class="title"><p>Crear Nota de Venta</p>
+					</div>
+					<div class="content">  
+						<br>         
+						<div>  
+							<div class="fright">
+								<a href="principal_comercializacion.php"><input type="button" value="Volver&raquo;"/></a>
+								<a href="crear_nota_venta.php"><input type="button"  value="Nueva Nota de Venta&raquo;"/></a>
+							</div>
+						</div>
+					 	<table class="tableform">
+							<tr>
+								<td>
+									<label>Lista de Precios</label>
+								</td>
+								<td id='lista_precio'>
+								</td>	
+								<td>
+									<label>Version</label>
+									<input type="text" id="version" onkeypress="ValidaSoloNumeros()" value='1' readonly placeholder="Version"/>	
+								</td>
+								<td style="display:none" id='estado_proforma'>
+								 <font color='#cc3366'>Proforma Rechazada por Finanzas	</font>						 							 		 
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Numero de Venta</label>
+								</td>
+								<td>
+									<label>Fecha</label>
+								</td>
+								<td>
+									<label>Centro de Venta</label>
+								</td>
+								<td>
+									<label>Orden de Compra</label>
+								</td>	
+							</tr>
+								<td>
+ 									<input type="text" id="num_nota_venta"  onkeypress="ValidaSoloNumeros()" placeholder="Numero"/>	
+									<input type="hidden" id="id_Usuario"  value="<?php echo $id_Usuario?>"/>	
+									<div id="valida-nota_venta" style="display:none" class="errores">
+										Debe Ingresar Nota de Venta
+									</div> 
+									<div id="valida-nota_venta_mayor" style="display:none" class="errores">
+										El Numero que Ingrea es Mayor al de El Correlativo
+									</div>
+									<div id="valida-nota_venta_0" style="display:none" class="errores">
+										El Numero No Puede Ser 0 !!!!
+									</div> 
+									<div id="valida-nota_venta_crear" style="display:none" class="errores">
+										Debe Crear Nota de Venta
+									</div> 
+									<div id="valida-nota_venta_correlativo" style="display:none" class="errores">
+										Numero Mas Alto que de el Correlativo
+									</div> 
+								</td>
+								<td>
+									<input type="text" id="fecha_nota_venta" class='limpiar' placeholder="Fecha" value="<?php echo date('d-m-Y')?>" readonly/>
+									<div id="valida-fecha_nota_venta" style="display:none" class="errores">
+										Debe Ingresar Fecha de Nota de Venta
+									</div> 
+								</td>
+								<td>
+									<select id="centro_venta" class='limpiar'>
+									</select>
+									<div id="valida-c_venta" style="display:none" class="errores">
+										Debe Ingresar Centro de Venta
+									</div> 
+								</td>
+								<td>
+ 									<input type="text" id="orden_compra" class='limpiar' placeholder="Orden de Compra"/>	
+								</td>
+							<tr>
+								<td>
+									<label>Cliente</label>
+								</td>
+								<td>
+									<label>Fecha de Despacho</label>
+								</td>
+								<td>
+									<label>Condicion de Venta</label>
+								</td>
+								<td>
+									<label>Rut Cliente</label>
+								</td>
+							</tr>
+							<tr>
+								<td>
+ 									<select id="id_cliente_nacional" class='limpiar'>
+									</select>
+									<!--Aqui se Selecciona el cliente y tiene que ir a ver cuantas facturas tiene pendiente al finalizar el tema de las factura ver el tema de el cliente-->
+									<div id="valida-c_nac" style="display:none" class="errores">
+										Debe Ingresar Cliente 
+									</div> 
+								</td>
+								<td>
+									<input type="text" id="fecha_despacho_nota_venta" class='limpiar' placeholder="Fecha Despacho" readonly/>
+									<div id="valida-fecha_desp_nota_venta" style="display:none" class="errores">
+										Debe Ingresar Fecha de Nota de Venta
+									</div> 
+								</td>
+								<td>
+									<select id='condicion_venta' class='limpiar'>
+									</select>
+									<div id="valida-cond_venta" style="display:none" class="errores">
+										Debe Ingresar Condicion de Venta
+									</div> 
+								</td>
+								<td>
+									<input type="text" id="rut_cliente"  class='limpiar' placeholder="Rut Cliente" readonly/>
+								</td>
+							</tr>
+							<tr>
+								<td colspan='2'>
+									<label>Indicacion Despacho</label>
+									<textarea rows="2" cols="40" id='obs_despacho'class='limpiar' placeholder="Indicacion"></textarea>
+								</td>
+								<td>
+									<label>Vendedor</label>
+									<select id='list_vendedores' class='limpiar'>
+									</select>
+									<div id="valida-vendedor" style="display:none" class="errores">
+										Debe Ingresar Vendedor
+									</div> 
+								</td>
+							</tr>
+								<td>
+									<label>Cajas</label>
+							 		<input type="text"  id="cajas" onkeypress="ValidaSoloNumeros()" class="limpiar" placeholder="Cantidad"/>
+									<div id="valida-cajas" style="display:none" class="errores">
+										Debe Ingresar Numero de Cajas
+									</div> 									
+								</td>
+								<td>
+									<label>Precio</label>
+									<input type="text" id="precio" class="limpiar" readonly placeholder="Precio"/>
+									<div id="valida-precio" style="display:none" class="errores">
+										Precio No Ingresado en Lsita de Precios
+									</div> 
+								</td>
+								<td>
+									<label>Descuento</label>
+									<input type="text" id="descuento" value='0' class="limpiar" placeholder="Descuento"/>
+								</td>
+								<td>
+									<label>Producto</label>
+									<select id="list_prod_term" class="limpiar">
+									</select>
+									<div id="valida-producto" style="display:none" class="errores">
+										Debe Ingresar Producto
+									</div> 
+									<div id="valida-stock_cero" style="display:none" class="errores">
+										Cantidad de stock es 0 
+									</div> 
+									<div id="valida-stock_mayor" style="display:none" class="errores">
+										La Cantidad que ingresa es Mayor al Stock
+									</div> 
+									<div id="valida-cantidad_es_0" style="display:none" class="errores">
+										La Cantidad que Esta Ingresando es 0 !!!!!!!
+									</div> 
+									<div id="stock" style="display:none" class="errores">
+									</div> 
+								</td>
+								<td>
+									<div class="fright" id='prod_nota_modificar'  style="display:none">
+										<input type="submit" onclick='$(this).elimina_prod_detalle_nota_venta_modif();' value="Agregar Productos &raquo;"/>
+									</div>
+									<div class="fright" id='prod_nota_nuevos'>
+										<input type="submit" onclick='$(this).ingresa_producto_nota_venta();' value="Agregar Productos &raquo;"/>
+									</div>
+									<div class="fright" style="display:none" id='prod_nota_antiguos'>
+										<input type="submit" onclick='$(this).ingresa_producto_nota_venta_antigua();' value="Agregar Productos &raquo;"/>
+									</div>
+									<div class="fright" style="display:none" id='prod_nota_venta_modificar'>
+										<input type="submit" onclick='$(this).ingresa_prod_detalle_nota_venta_modificar();' value="Agregar Productos &raquo;"/>
+									</div>
+								</td>
+							</tr>
+			 				<tr>
+								<td colspan="5">
+									<article class="module width_full">            
+										<div class="module_content">
+											<table class="tablesorter" id='productos'> 
+												<thead> 
+													<tr>
+														<th width="100">
+															Codigo de Producto
+														</th>
+														<th>
+															Producto
+														</th>
+														<th>
+															Solicitado
+														</th>
+														 <th>
+															Precio
+														</th>
+														<th>
+															Total
+														</th>
+														<th>
+															%
+														</th>
+														<th>
+															Descuento
+														</th>													
+														<th>
+															Eliminar
+														</th>
+														<th>
+															Editar
+														</th>	
+													</tr> 
+													<tbody id='productos_finanzas'>
+														<div id="valida-productos_pedidos" style="display:none" class="errores">
+															Debe Ingresar Productos para crear Nota de Venta
+														</div> 
+														<div id="valida-productos_repetidos" style="display:none" class="errores">
+															Productos ya se Encuentran en la  Nota de Venta
+														</div> 
+													</tbody>
+												</thead>
+											 </table>
+										</div>
+									</article>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									&nbsp;
+								</td>
+								<td colspan="1">
+									<label>Sub Total</label>
+								</td>
+								<td>
+									<input type="text" id="subtotal_nota_venta" class='limpiar_2' value="0" readonly/>
+								</td>
+								<tr>
+									<td>
+										&nbsp;
+									</td>
+								</tr>
+								 <tr>
+									<td>
+										&nbsp;
+									</td>
+									<td>
+										<label>Total ILA</label>
+									</td>
+									<td>
+										<input type="text" id="ila_nota_venta" class='limpiar_2'  value="0" readonly/>
+									</td>
+									<td>
+										&nbsp;
+									</td>
+								</tr>
+								<tr>
+									<td>
+										&nbsp;
+									</td>
+									<td>
+										<label>Total IVA</label>
+									</td>
+									<td>
+										<input type="text" id="iva_nota_venta" class='limpiar_2' value="0" readonly/>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										&nbsp;
+									</td>
+									<td>
+										<label>Total Factura</label>
+									</td>
+									<td>
+										<input type="text" id="total_nota_venta" class='limpiar_2' value="0" readonly/>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+										<div class="fright" id='btn_nota_nueva'> 
+											<input type="submit" onClick='$(this).ingresa_nota_venta();' value="Crear Nota de Venta &raquo;"/> 
+										</div>
+										<div class="fright" id='btn_nota_modificada'  style="display:none"> 
+											<input type="submit" onClick='$(this).ingresa_nota_venta_versiones();' value="Actualizar Nota de Venta &raquo;"/> 
+										</div>
+										<div class="fright" id='btn_imprimir'  style="display:none"> 
+											<input type="submit" onClick='$(this).imprimir_nota_venta();' value="Imprimir &raquo;"/> 
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>		
+				</div>
+			</div>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

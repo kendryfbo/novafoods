@@ -1,0 +1,94 @@
+/* IE has layout issues when sorting (see #5413) */
+.group { zoom: 1 }
+#logos img{
+
+	width:128px;
+	height:128px;
+	margin-top:10px;
+}
+#logos #logo_bsp{
+
+	float:left;
+	margin-left:20px;
+}
+#logos #logo_chartis{
+
+	float:right;
+	margin-right:20px;
+	width:170px;
+}
+.iconos{
+
+	width:30px;
+	height:30px;
+	margin-left:20px;
+	cursor:pointer;
+}
+#imagenes{
+
+	clear:both;
+	display:none;
+
+}
+#imagenes #miniatura{
+
+	width:640px;
+	float:left;
+}
+#imagenes #zoom{
+
+	width:zIndex;
+	float:right;
+	height:480;
+	border:1px solid #caf3f7;
+
+}
+#imagenes #comentario{
+
+	width:640px;
+	float:right;
+	border:1px solid #caf3f7;
+
+}
+#informes{
+
+	clear:both;
+	display:none;
+
+}
+#informes #docu{
+
+	width:200px;
+	float:left;
+}
+#informes #informe{
+
+	width:zIndex;
+	float:right;
+	height:600;
+	border:1px solid #caf3f7;
+
+}
+#form {
+    border:2px solid #caf3f7;
+    width:450px;
+    margin:auto;
+}
+#form legend{
+    font-weight:bold;
+    font-size:12px;
+}
+#form ol{
+    list-style:none;
+}
+#form ol li{
+    padding-bottom:5px;
+}
+#form ol li label{
+    width:120px;
+    float:left;
+    text-align:left;
+}
+#form input[type=text] {
+    border:1px solid #CCCCCC;
+}

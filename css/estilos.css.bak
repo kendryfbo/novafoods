@@ -1,0 +1,11 @@
+ 
+        .errores{
+ 
+            background: white;
+			
+            color: red;
+            display: none;
+            font-size: 14px;
+ 
+        }
+ 

@@ -1,0 +1,633 @@
+<?php
+	date_default_timezone_set('UTC');
+	$fecha=date("Y-m-d");
+	include_once("clases/conexion.php"); 
+	session_start();
+	if(!isset($_SESSION['usuario'])) 
+	{
+	  header('Location: index.php'); 
+	  exit();
+	} 
+	$user=($_SESSION['usuario']);
+	$id_Usuario=($_SESSION['id_Usuario']);  
+?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>Nota de Credito</title>
+	<link href="css/reset.css" rel="stylesheet" type="text/css" />
+	<link href="css/estilo2.css" rel="stylesheet" type="text/css" />
+	<link href="css/estilos.css" rel="stylesheet" type="text/css" />
+	<script src="js/jquery.js"></script>
+	<script src="js/funcion_combos.js"></script>
+	<script src="js/funcion_combos_pedidos.js" type="text/javascript"></script>
+	<script src="js/funcion_ventas_productos.js"></script>	
+	<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+	<script src="js/jquery-ui-custom.min.js"></script>
+	<link type="text/css" href="css/jquery-ui-custom.css" rel="stylesheet" />
+</head>
+<script>
+$(document).ready(function() {	
+	$("#fecha_nota_venta").datepicker({
+		dateFormat: 'dd-mm-yy',
+        changeMonth: true,
+        changeYear: true,
+        showAnimate: 'drop',
+	});	
+	$('#factura_nota_credito').keypress(function (e) {
+		if(e.which==13)
+		{
+			$("#factura_nota_credito").attr('disabled',true);
+			var action = confirm('Desea Traer Factura?');
+			if(action==true)
+			{
+				if($.trim($("#factura_nota_credito").val())==="") 
+				{
+					$("#factura_nota_credito").focus();
+					$('#valida-fact').fadeIn('slow'); 
+					setTimeout(function(){$('#valida-fact').fadeOut('slow');},1000); 
+					return false;
+				}
+				if ($.trim($("#factura_nota_credito").val())==="0") 
+				{
+					$('#factura_nota_credito').val('')
+					$("#factura_nota_credito").focus ();
+					$('#valida-fact_0').fadeIn('slow'); 
+					setTimeout(function(){$('#valida-fact_0').fadeOut('slow');},1000); 
+					return false;
+				}
+				var factura_nota_credito=$("#factura_nota_credito").val ();
+				var stream="factura_nota_credito="+factura_nota_credito+"&"+"funcion="+9;
+				$.ajax({
+					type: "POST",
+					url: "insert/funciones_notas_credito.php",
+					data:stream,
+					success: function(data)	{
+						if (data==1)
+						{
+							$("#factura_nota_credito").focus();
+							$("#factura_nota_credito").val('');
+							$('#valida-fact_ext').fadeIn('slow'); 
+							setTimeout(function(){$('#valida-fact_ext').fadeOut('slow');},1000); 
+							return false;
+						}
+						else if (data==2)
+						{
+							$("#factura_nota_credito").focus();
+							$("#factura_nota_credito").val('');
+							$('#valida-fact_ing').fadeIn('slow'); 
+							setTimeout(function(){$('#valida-fact_ing').fadeOut('slow');},1000); 
+						}
+						else if (data==3)
+						{
+							$("#ingreso_prod").show();
+							$("#total_nota").attr('readonly',true);
+							$("#iva_nota").attr('readonly',true);
+							$("#ila_nota").attr('readonly',true);
+							$("#subtotal_nota").attr('readonly',true);							
+							var stream="factura_nota_credito="+factura_nota_credito+"&"+"funcion="+21;
+							$.ajax({
+								type: "POST",
+								url: "insert/ingresa_nota_venta.php",
+								data:stream,
+								cache: false,
+								dataType: 'json',
+								success: function(data)	{
+									for(i=0;i<data.length;i++)
+									{
+										$('#id_cliente_nacional').val(data[i].nombre_cliente);
+										$('#centro_venta').val(data[i].centro_venta);
+										var stream="factura="+factura_nota_credito+"&"+"funcion="+16;
+										$.ajax({
+											type: "POST",
+											url: "select/funciones_facturacion.php",
+											data:stream,
+											success: function(data)	{
+												$('#productos_finanzas').html("");	
+												$('#productos_finanzas').append(data);		
+											}
+										});	
+									}
+								}
+							});	
+						}
+					}
+				});					
+			}
+		}
+	});	
+	$('#subtotal_nota').keypress(function (e) {
+		if(e.which ==13)
+		{
+			var subtotal=$('#subtotal_nota').val();
+			var ila=$('#ila_nota').val();	
+			var iva=parseFloat(subtotal)*0.19;
+			$('#iva_nota').val(iva);
+			var total=(parseFloat(ila)+parseFloat(iva)+parseFloat(subtotal));
+			$('#total_nota').val(total);
+		}
+	});	
+	$('#ila_nota').keypress(function (e) {
+		if(e.which ==13)
+		{
+			var subtotal=$('#subtotal_nota').val();
+			var ila=$('#ila_nota').val();	
+			var iva=parseFloat(subtotal)*0.19;
+			$('#iva_nota').val(iva);
+			var total=(parseFloat(ila)+parseFloat(iva)+parseFloat(subtotal));
+			$('#total_nota').val(total);
+		}
+	});	
+	var stream="funcion="+1;
+	$.ajax({
+		type: "POST",
+		url: "insert/funciones_notas_credito.php",
+		data:stream,
+		success: function(data)	{
+			$('#n_credito').val(data);		
+		}
+	});	
+	$('#n_credito').keypress(function (e) {
+		if(e.which ==13)
+		{	
+			var nota_credito=$('#n_credito').val();
+			var stream="nota_credito="+nota_credito+"&"+"funcion="+13;
+			$.ajax({
+				type: "POST",
+				url: "insert/funciones_notas_credito.php",
+				data:stream,
+				success: function(data)	{
+					if (data==1)
+					{
+						var id_Usuario=$('#id_Usuario').val();			
+						var stream="id_Usuario="+id_Usuario+"&"+"funcion="+2;
+						$.ajax({
+							type: "POST",
+							url: "insert/funciones_notas_credito.php",
+							data:stream,
+							success: function(data)	{
+								$('#n_credito').val(data);
+								$('#n_credito').attr('disabled',true);
+							}
+						});	
+					}
+					else if (data==2)
+					{
+						var stream="nota_credito="+nota_credito+"&"+"funcion="+14;
+						$.ajax({
+							type: "POST",
+							url: "insert/funciones_notas_credito.php",
+							data:stream,
+							success: function(data)	{
+								if (data==1)
+								{
+									$("#n_credito").focus();
+									$("#n_credito").val('');
+									$('#valida-n_credito_mal').fadeIn('slow'); 
+									setTimeout(function(){$('#valida-n_credito_mal').fadeOut('slow');},1000); 
+									return false;
+								}
+								else if (data==2)
+								{
+									$("#aceptar_nota_cred").hide();
+									var stream="nota_credito="+nota_credito+"&"+"funcion="+15;
+									$.ajax({
+										type: "POST",
+										url: "insert/funciones_notas_credito.php",
+										data:stream,
+										cache: false,
+										dataType: 'json',
+										success: function(data)	{
+											for(i=0;i<data.length;i++)
+											{
+												if (data[i].valor==1)
+												{
+													alert ("Nota de Credito Vacia Ingrese Otra");
+													location.href = "nota_credito.php";
+												}
+												else
+												{
+													$('#imprimir').show();
+													$('#centro_venta').val(data[i].centro_venta);
+													$('#fecha_nota_venta').val(data[i].fecha_nota_venta);
+													$('#id_cliente_nacional').val(data[i].nombre_cliente);
+													$('#factura_nota_credito').val(data[i].numero_factura);
+													$('#obs_nota_credito').val(data[i].observacion_nota_credito);		
+													$('#subtotal_nota').val(data[i].subtotal);		
+													$('#ila_nota').val(data[i].total_ila);		
+													$('#iva_nota').val(data[i].total_iva);		
+													$('#total_nota').val(data[i].total);													
+													var factura=$('#factura_nota_credito').val();
+													if (factura!=0)
+													{
+														var stream="factura="+factura+"&"+"funcion="+10;
+														$.ajax({
+															type: "POST",
+															url: "insert/funciones_notas_credito.php",
+															data:stream,
+															success: function(data)	{
+																$('#productos_finanzas_2').html("");	
+																$('#productos_finanzas_2').append(data);		
+															}
+														});															
+													}
+													else
+													{
+														$('#productos_finanzas_2').html("");	
+														$('#productos_finanzas_2').append("No Tiene Productos Esta Nota de Credito");	
+													}
+												}	
+											}
+										}
+									});	
+								}
+							}
+						});	
+					}
+				}
+			});				
+		}
+	});	
+	 $("#popdetallestk").dialog({
+		autoOpen:false,
+		modal:true,
+		width:900,
+		buttons:{
+			"Cerrar":function(){
+				$(this).dialog("close");
+				$("input:checkbox").prop('checked', false);
+			}
+		}			
+	});
+});
+$.fn.imprimir_nota_credito=function(){
+	var numero = $("#n_credito").val ();
+	window.open('select/imprimir_datos_facturas.php?funcion='+5+'&numero='+numero);
+}
+//funcion que ingresa la nota de venta a la tabla
+$.fn.ingresa_nota_credito=function(){
+	if ($('#n_credito').is(":not(:disabled)"))
+	{
+		$("#n_credito").focus ();
+		$('#valida-n_credito_crear').fadeIn('slow'); 
+		setTimeout(function(){$('#valida-n_credito_crear').fadeOut('slow');},1000); 
+		return false;			
+	}
+	else
+	{
+		if($.trim($("#centro_venta").val())==="") 
+		{
+			$("#centro_venta").focus();
+			$('#valida-c_venta').fadeIn('slow'); 
+			setTimeout(function(){$('#valida-c_venta').fadeOut('slow');},1000); 
+			return false;
+		}
+		if($.trim($("#fecha_nota_venta").val())==="") 
+		{
+			$("#fecha_nota_venta").focus();
+			$('#valida-fecha_nota_venta').fadeIn('slow'); 
+			setTimeout(function(){$('#valida-fecha_nota_venta').fadeOut('slow');},1000); 
+			return false;
+		}
+		if($.trim($("#id_cliente_nacional").val())==="") 
+		{
+			$("#id_cliente_nacional").focus();
+			$('#valida-c_nac').fadeIn('slow'); 
+			setTimeout(function(){$('#valida-c_nac').fadeOut('slow');},1000); 
+			return false;
+		}
+		if($.trim($("#subtotal_nota").val())==="") 
+		{
+			$("#subtotal_nota").focus();
+			$('#valida-sub_t').fadeIn('slow'); 
+			setTimeout(function(){$('#valida-sub_t').fadeOut('slow');},1000); 
+			return false;
+		}
+		var nota_credito=$('#n_credito').val();
+		var centro_venta = $('#centro_venta option:selected').attr('id');
+		var fecha_nota_venta=$('#fecha_nota_venta').val();
+ 		var id_cliente_nacional = $('#id_cliente_nacional option:selected').attr('id');
+		var factura_nota_credito=$('#factura_nota_credito').val();
+		var obs_nota_credito=$('#obs_nota_credito').val();
+		var subtotal_nota=$('#subtotal_nota').val();
+		var ila_nota=$('#ila_nota').val();
+		var iva_nota=$('#iva_nota').val();
+		var total_nota=$('#total_nota').val();
+		var stream="nota_credito="+nota_credito+"&"+"centro_venta="+centro_venta+"&"+"fecha_nota_venta="+fecha_nota_venta
+			+"&"+"id_cliente_nacional="+id_cliente_nacional+"&"+"factura_nota_credito="+factura_nota_credito+"&"+"obs_nota_credito="+obs_nota_credito
+			+"&"+"subtotal_nota="+subtotal_nota+"&"+"ila_nota="+ila_nota+"&"+"iva_nota="+iva_nota+"&"+"total_nota="+total_nota+"&"+"funcion="+3;
+		$.ajax({
+			type: "POST",
+			url: "insert/funciones_notas_credito.php",
+			data:stream,
+			success: function(data)	{
+				alert (data);
+				location.href = "nota_credito.php";
+			}
+		});
+	}
+}
+$.fn.ingresa_producto_nota_credito=function(id_datalle_factura,cantidad_bd){
+	var cantidad=$(".cantidad"+id_datalle_factura).val();
+	if ($('#n_credito').is(":not(:disabled)"))
+	{
+		$("#n_credito").focus ();
+		$('#valida-n_credito_crear').fadeIn('slow'); 
+		setTimeout(function(){$('#valida-n_credito_crear').fadeOut('slow');},1000); 
+		return false;			
+	}
+	if (cantidad>cantidad_bd)
+	{
+		$(".cantidad"+id_datalle_factura).focus();
+		$(".cantidad"+id_datalle_factura).val('');
+		$('#valida-cantidad_mayor'+id_datalle_factura).fadeIn('slow'); 
+		setTimeout(function(){$('#valida-cantidad_mayor'+id_datalle_factura).fadeOut('slow');},1000); 
+		return false;
+	}
+	if($.trim($(".cantidad"+id_datalle_factura).val())==="") 
+	{
+		$(".cantidad"+id_datalle_factura).focus();
+		$(".cantidad"+id_datalle_factura).val('');
+		$('#valida-cantidad_vacia'+id_datalle_factura).fadeIn('slow'); 
+		setTimeout(function(){$('#valida-cantidad_vacia'+id_datalle_factura).fadeOut('slow');},1000); 
+		return false;
+	}
+	if($.trim($(".cantidad"+id_datalle_factura).val())==="0") 
+	{
+		$(".cantidad"+id_datalle_factura).focus();
+		$(".cantidad"+id_datalle_factura).val('');
+		$('#valida-cantidad_cero'+id_datalle_factura).fadeIn('slow'); 
+		setTimeout(function(){$('#valida-cantidad_cero'+id_datalle_factura).fadeOut('slow');},1000); 
+		return false;
+	}
+	var stream="cantidad="+cantidad+"&"+"id_datalle_factura="+id_datalle_factura+"&"+"funcion="+8;
+	$.ajax({
+		type: "POST",
+		url: "insert/funciones_notas_credito.php",
+		data:stream,
+		success: function(data)	{
+			if (data==1)
+			{
+	 			$('#valida-prod_ext'+id_datalle_factura).fadeIn('slow'); 
+				setTimeout(function(){$('#valida-prod_ext'+id_datalle_factura).fadeOut('slow');},1000); 
+				return false;
+			}
+			else
+			{
+				var factura_nota_credito=$("#factura_nota_credito").val();
+				var stream="factura="+factura_nota_credito+"&"+"funcion="+10;
+				$.ajax({
+					type: "POST",
+					url: "insert/funciones_notas_credito.php",
+					data:stream,
+					success: function(data)	{
+						$("#productos_finanzas").find("#"+id_datalle_factura).remove();
+						$('#productos_finanzas_2').html("");	
+						$('#productos_finanzas_2').append(data);	
+						$("#popdetallestk").dialog("close");
+						var stream="factura="+factura_nota_credito+"&"+"funcion="+11;
+						$.ajax({
+							type: "POST",
+							url: "insert/funciones_notas_credito.php",
+							data:stream,
+							success: function(data)	{
+								$("#subtotal_nota").val(data);
+								var subtotal=$("#subtotal_nota").val();
+								var iva=(subtotal*19)/100;
+								$("#iva_nota").val(iva);
+								var ila_factura=$("#ila_nota").val();
+								var stream="id_datalle_factura="+id_datalle_factura+"&"+"ila_factura="+ila_factura+"&"+"funcion="+12;
+								$.ajax({
+									type: "POST",
+									url: "insert/funciones_notas_credito.php",
+									data:stream,
+									success: function(data)	{
+										$("#ila_nota").val(data);
+										var ila_factura=$("#ila_nota").val();
+										$("#total_nota").val(parseInt(ila_factura)+parseInt(subtotal)+parseInt(iva));
+			 						}
+								});									
+							}
+						});	
+					}
+				});	
+			}
+		}
+	});
+ }
+$.fn.ingresa_prod_nota_cred=function(){
+	$("#popdetallestk").dialog("open");
+}
+function ValidaSoloNumeros() {
+ if ( (event.keyCode < 48 ) || (event.keyCode > 57) ) 
+  event.returnValue = false;
+}
+</script>
+<body>
+<table class="table">
+	<tr>
+		<input type="hidden" id="id_Usuario" value="<?php echo $id_Usuario?>"/>	
+		<td height="100%">
+			<div class="body">
+				<div class="modulo widht_modulo_full">
+					<div class="title"><p>Nota de Credito</p>
+					</div>
+					<div class="content">  
+						<br>         
+						<div>  
+							<div class="fright">
+								<a href="principal_comercializacion.php"><input type="button" value="Volver&raquo;"/></a>
+								<a href="nota_credito.php"><input type="button" value="Nueva&raquo;"/></a>
+							</div>
+						</div>
+					 	<table class="tableform">
+							<tr>
+								<td>
+									<label>Nota de Credito</label>
+									<input type="text" id="n_credito" onkeypress="ValidaSoloNumeros()" placeholder="Nota de Credito"/>	
+									<div id="valida-n_credito_crear" style="display:none" class="errores">
+										Debes Crear Nota de Credito
+									</div> 
+									<div id="valida-n_credito_mal" style="display:none" class="errores">
+										Nota de Credito no Existente
+									</div>
+								</td>
+								<td>
+									<label>Centro de Venta</label>
+									<select id="centro_venta" class='limpiar'>
+									</select>
+									<div id="valida-c_venta" style="display:none" class="errores">
+										Debe Ingresar Centro de Venta
+									</div> 
+								</td>
+								<td>
+									<label>Fecha</label>
+									<input type="text" id="fecha_nota_venta" placeholder="Fecha" value="<?php echo date('d-m-Y')?>" readonly/>
+									<div id="valida-fecha_nota_venta" style="display:none" class="errores">
+										Debe Ingresar Fecha de Nota de Credito
+									</div>
+								</td>
+								<td>
+									<label>Cliente</label>
+									<select id="id_cliente_nacional" class='limpiar'>
+									</select>
+									<!--Aqui se Selecciona el cliente y tiene que ir a ver cuantas facturas tiene pendiente al finalizar el tema de las factura ver el tema de el cliente-->
+									<div id="valida-c_nac" style="display:none" class="errores">
+										Debe Ingresar Cliente 
+									</div> 
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Factura</label>
+									<input type="text" id="factura_nota_credito" onkeypress="ValidaSoloNumeros()" placeholder="Factura"/>	
+									<div id="valida-fact" style="display:none" class="errores">
+										Debe Ingresar Factura 
+									</div>
+									<div id="valida-fact_ing" style="display:none" class="errores">
+										Factura ya se encuentra ingresada
+									</div>
+									<div id="valida-fact_0" style="display:none" class="errores">
+										 Factura en Cero !!!!
+									</div>
+									<div id="valida-fact_ext" style="display:none" class="errores">
+										Debe Ingresar Factura Existente
+									</div>
+								</td>
+								<td colspan='2'>
+									<label>Detalle de Nota de Credito</label>
+									<textarea rows="2" cols="40" id='obs_nota_credito' class='limpiar' placeholder="Observacion"></textarea>
+								</td>
+							</tr>
+							<tr>
+								<td colspan='4' id='ingreso_prod' style="display:none">
+									<div class="fright"> 
+									<input type="submit" onClick='$(this).ingresa_prod_nota_cred();' value="Ingresa Productos &raquo;"/> 
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Sub Total</label>
+								</td>
+								<td>
+									<input type="text" id="subtotal_nota" class='limpiar_2' onkeypress="ValidaSoloNumeros()"/>
+									<div id="valida-sub_t" style="display:none" class="errores">
+										Debe Ingresar Sub Total 
+									</div> 
+								</td>
+								<td>
+									<label>Total ILA</label>
+								</td>
+								<td>
+									<input type="text" id="ila_nota" class='limpiar_2'  value="0" onkeypress="ValidaSoloNumeros()"/>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Total IVA</label>
+								</td>
+								<td>
+									<input type="text" id="iva_nota" class='limpiar_2' value="0" readonly />
+								</td>
+								<td>
+									<label>Total</label>
+								</td>
+								<td>
+									<input type="text" id="total_nota" class='limpiar_2' value="0" readonly/>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="5">
+									<article class="module width_full">            
+										<div class="module_content">
+											<table class="tablesorter" > 
+												<thead> 
+													<tr>
+														<th width="100">
+															Codigo de Producto
+														</th>
+														<th>
+															Producto
+														</th>
+														<th>
+															Solicitado
+														</th>
+														 <th>
+															Precio
+														</th>
+														<th>
+															Total
+														</th>
+														<th>
+															%
+														</th>
+														<th>
+															Descuento
+														</th>
+													</tr> 
+													<tbody id='productos_finanzas_2'>
+													</tbody>
+												</thead>												
+											</table>
+										</div>
+									</article>
+								</td>
+							</tr>
+						</table>
+						<div class="fright"> 
+							<input type="submit" id='aceptar_nota_cred' onClick='$(this).ingresa_nota_credito();' value="Ingresar &raquo;"/> 
+						</div>
+						<div class="fright" style="display:none" id='imprimir'> 
+							<input type="submit" id='imprimir_nota_cred' onClick='$(this).imprimir_nota_credito();' value="Imprimir &raquo;"/> 
+						</div>
+					</div>		
+				</div>
+			</div>
+		</td>
+	</tr>	
+</table>
+<div id="popdetallestk" title='Producto a Ingresar a Nota de Credito' style="display:none" >
+	<tr>
+		<td colspan="5">
+			<article class="module width_full">            
+				<div class="module_content">
+					<table class="tablesorter" id='productos'> 
+						<thead> 
+							<tr>
+								<th width="100">
+									Codigo de Producto
+								</th>
+								<th>
+									Producto
+								</th>
+								<th>
+									Solicitado
+								</th>
+								 <th>
+									Precio
+								</th>
+								<th>
+									Total
+								</th>
+								<th>
+									%
+								</th>
+								<th>
+									Descuento
+								</th>
+								<th>
+									Seleccionar
+								</th>
+							</tr> 
+							<tbody id='productos_finanzas'>
+							</tbody>
+						</thead>												
+					</table>
+				</div>
+			</article>
+		</td>
+	</tr>
+</div> 
+</body>
+</html>

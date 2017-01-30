@@ -1,0 +1,44 @@
+<?php	 
+
+	include_once("../clases/conexion.php");
+	$conexion= new conexion(); 
+ 
+	$proveedor=trim($_POST["proveedor"]);
+	$direccion=trim($_POST["direccion"]);
+	$id_pais=trim($_POST["id_pais"]);
+ 	$fono=trim($_POST["fono"]);
+	$giro=trim($_POST["giro"]);
+	$id_cargo=trim($_POST["id_cargo"]);
+	$email=trim($_POST["email"]);
+	$cond_pago=trim($_POST["cond_pago"]);
+	$contacto=trim($_POST["contacto"]);
+	$id_proveedor=trim($_POST["id_proveedor"]);
+ 
+
+	 try{		
+			mysql_query("SET NAMES 'utf8'");
+			$sql1="UPDATE proveedores_internacionales	 
+				set 		 
+				nombre_proveedor='".utf8_decode($proveedor)."',
+				direccion='".utf8_decode($direccion)."',
+				id_pais='".$id_pais."',
+				telefono='".$fono."',
+				giro='".$giro."',
+				Contacto='".$contacto."',
+				id_cargo='".$id_cargo."',
+				email='".$email."',
+				condicion_de_pago='".$cond_pago."'	
+				where id_proveedor=".$id_proveedor;
+			$resultado=mysql_query($sql1,$conexion->link);
+				
+				
+			echo "Proveedor Actualizado";
+		}
+			catch (Exception $e)
+		{    
+			 echo $e->getMessage();
+		}
+
+
+					
+?>	

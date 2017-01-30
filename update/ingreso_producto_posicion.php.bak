@@ -1,0 +1,28 @@
+<?php
+	include_once("../clases/conexion.php");
+	$conexion= new conexion();
+    $numero_codigo_barra=trim($_POST["numero_codigo_barra"]);
+	
+	$sql="select detalle_veredas.id_vereda,detalle_veredas.cajas,detalle_veredas.id_produccion,produccion.id_producto
+	from detalle_veredas
+	inner join produccion on produccion.id_produccion=detalle_veredas.id_produccion
+	where detalle_veredas.id=".$numero_codigo_barra;
+	$resultado=mysql_query($sql,$conexion->link);
+	if ($fila = mysql_fetch_array($resultado))
+	{
+		$sql1="UPDATE veredas	 
+		set 		 
+		id_estado_vereda=3
+		where id=".$fila[0];
+		$resultado1=mysql_query($sql1,$conexion->link);
+		
+		$sql3="INSERT INTO bodega_producto_terminado (cantidad,estado,id_producto,id_produccion)
+				VALUES ('$fila[1]','i','$fila[3]','$fila[2]')";
+		$resultado=mysql_query($sql3,$conexion->link);
+
+	echo $fila[0];
+	}
+
+ 
+?>	
+	
